@@ -36,4 +36,8 @@ class Authentication(authenticationService: IAuthenticationService) {
   }
 }
 
+object Authentication {
+  def apply(authenticationService: IAuthenticationService) = new Authentication(authenticationService)
+}
+
 

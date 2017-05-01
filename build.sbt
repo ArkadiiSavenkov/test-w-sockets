@@ -18,3 +18,13 @@ lazy val webSocketServer = (project in file("web-socket-server"))
   .settings(
     libraryDependencies ++= serverDependencies
   )
+
+lazy val webSocketCli = (project in file("web-socket-cli"))
+  .settings(
+    commonSettings
+  )
+  .settings(
+    libraryDependencies ++= serverDependencies
+  )
+  .dependsOn(webSocketServer)
+
