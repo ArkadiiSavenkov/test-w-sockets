@@ -12,6 +12,7 @@ object Dependencies {
     "org.asynchttpclient" % "async-http-client" % "2.0.31",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.8",
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.8.8",
+    "org.scalaz" %% "scalaz-core" % "7.2.11",
     "org.scalatest" %% "scalatest" % "3.0.1" % "test"
   )
 }
