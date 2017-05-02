@@ -10,7 +10,7 @@ import akka.stream.{ActorMaterializer, ActorMaterializerSettings, FlowShape, Sup
 import akka.stream.scaladsl.{Flow, GraphDSL}
 import org.aas.websocket.actor.MemoryDbActor
 import org.aas.websocket.graph._
-import org.aas.websocket.model.Model
+import org.aas.websocket.model.{Model, PingRequest, PongResponse}
 import org.aas.websocket.service.{AuthenticationService, IAuthenticationService, User}
 
 import scala.io.StdIn
@@ -33,11 +33,14 @@ object WebSocketServer extends App {
     val start: FlowShape[Message, String] = builder.add(ConnectorFlows.flowStart)
     val finish: FlowShape[String, Message] = builder.add(ConnectorFlows.flowFinish)
 
-    def tempFlow = {
-      Flow[(Option[User], Model)].map(s => s._2)
+    def pingPongFlow: Flow[Model, Model, Any] = {
+      Flow[Model].map {
+        case ping: PingRequest => PongResponse(ping.seq)
+        case x => x
+      }
     }
 
-    start ~> ModelConvertorFlows.flowStringToModel ~> FilterFlows.entryFlow ~>
+    start ~> ModelConvertorFlows.flowStringToModel ~> FilterFlows.entryFlow ~> pingPongFlow ~>
       AuthenticationFlow(authenticationServer).flow ~> AuthorizationFlow.flow ~>
       MemoryDbFlow(memoryDbActor).flow ~> SubscriptionFlow(memoryDbActor).flow ~>
       ModelConvertorFlows.modelToString ~> finish

@@ -9,7 +9,7 @@ private[actor] class ListTableBuffer {
   private var list: ArrayBuffer[Table] = ArrayBuffer()
   private var genetatedId: Long = 0
 
-  def insert(afterId: Long, tableWithoutId: TableWithoutId) = {
+  def insert(afterId: Long, tableWithoutId: TableWithoutId): Table = {
     val newTable = Table(genetatedId, tableWithoutId.name, tableWithoutId.participants)
     genetatedId += 1
 
@@ -20,9 +20,9 @@ private[actor] class ListTableBuffer {
     newTable
   }
 
-  def update(requestTable: Table): Long \/ Table = {
+  def update(requestTable: Table): String \/ Table = {
     list.indexWhere(t => t.id == requestTable.id) match {
-      case -1 => -\/(requestTable.id)
+      case -1 => -\/(s"Error while updateTable with index ${requestTable.id}")
       case findIndex =>
         list.update(findIndex, requestTable)
         \/-(requestTable)
@@ -30,13 +30,12 @@ private[actor] class ListTableBuffer {
 
   }
 
-  def removeTable(tableId: Long): Long \/ Table = {
+  def removeTable(tableId: Long): String \/ Table = {
     list.indexWhere(t => t.id == tableId) match {
-      case -1 => -\/(tableId)
+      case -1 => -\/(s"Error while removeTable with index $tableId")
       case findIndex =>
         \/-(list.remove(findIndex))
     }
-
   }
 
   def all: List[Table] = {

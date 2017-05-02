@@ -2,7 +2,7 @@ package org.aas.websocket.graph
 
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
-import org.aas.websocket.model.{LoginFailedResponse, LoginRequest, LoginSuccessfulResponse, Model}
+import org.aas.websocket.model._
 import org.aas.websocket.service.{IAuthenticationService, User}
 
 import scalaz.{-\/, \/-}
@@ -26,7 +26,10 @@ class AuthenticationFlow(authenticationService: IAuthenticationService) {
         authenticationService.authenticate(userName, password) match {
           case \/-(user) =>
             authentication.user = Some(user)
-            (Some(user), LoginSuccessfulResponse(user.userType)) :: Nil
+            if (user.userType == "admin")
+              (Some(user), LoginSuccessfulResponse(user.userType)) :: (Some(user), SubscribeTablesRequest()) :: Nil
+            else
+              (Some(user), UnsubscribeTablesRequest()) :: (Some(user), LoginSuccessfulResponse(user.userType)) :: Nil
           case -\/(error) =>
             authentication.user = None
             (None, LoginFailedResponse()) :: Nil
@@ -34,9 +37,8 @@ class AuthenticationFlow(authenticationService: IAuthenticationService) {
       case (AuthenticationInfo(user), model) =>
         (Some(user), model) :: Nil
 
-      case _ => {
-        Nil
-      }
+      case (auth, p@PongResponse(seq)) => (None, p) :: Nil
+      case _ => Nil
     }
   }
 }
