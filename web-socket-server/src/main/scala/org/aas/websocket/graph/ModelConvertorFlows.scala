@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.aas.websocket.model.Model
 
-object ModelConvertors {
+object ModelConvertorFlows {
   val mapper = new ObjectMapper
   mapper.registerModule(DefaultScalaModule)
 

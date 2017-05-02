@@ -3,7 +3,7 @@ package org.aas.websocket.graph
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.scaladsl.Flow
 
-object Connectors {
+object ConnectorFlows {
 
   def flowStart: Flow[Message, String, Any] = {
     Flow[Message].collect {

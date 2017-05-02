@@ -4,13 +4,15 @@ import java.util.UUID
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import com.typesafe.scalalogging.LazyLogging
 import org.aas.websocket.model._
 import org.asynchttpclient.ws.{WebSocket, WebSocketTextListener, WebSocketUpgradeHandler}
 import org.asynchttpclient.{AsyncHttpClient, DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig}
 
 import scala.io.StdIn
+import scala.util.{Failure, Success, Try}
 
-object TestCli extends App {
+object TestCli extends App with LazyLogging {
   val mapper = new ObjectMapper
   mapper.registerModule(DefaultScalaModule)
 
@@ -42,45 +44,52 @@ object TestCli extends App {
   while (!break) {
     val inputLine = StdIn.readLine()
     val splitInputList: Array[String] = inputLine.split(" ")
-    splitInputList(0) match {
-      case "exit" => break = true
+    Try {
+      splitInputList(0) match {
+        case "exit" => break = true
 
-      case "help" => showHelp
+        case "help" => showHelp
 
-      case "login-admin" =>
-        val loginRequest = LoginRequest("admin", "admin")
-        websocket.sendMessage(mapper.writeValueAsString(loginRequest))
+        case "login-admin" =>
+          val loginRequest = LoginRequest("admin", "admin")
+          websocket.sendMessage(mapper.writeValueAsString(loginRequest))
 
-      case "login-user" =>
-        val loginRequest = LoginRequest("user", "password")
-        websocket.sendMessage(mapper.writeValueAsString(loginRequest))
+        case "login-user" =>
+          val loginRequest = LoginRequest("user", "password")
+          websocket.sendMessage(mapper.writeValueAsString(loginRequest))
 
-      case "login-illegal" =>
-        val loginRequest = LoginRequest("user", "password_illegal")
-        websocket.sendMessage(mapper.writeValueAsString(loginRequest))
+        case "login-illegal" =>
+          val loginRequest = LoginRequest("user", "password_illegal")
+          websocket.sendMessage(mapper.writeValueAsString(loginRequest))
 
-      case "illegal-command" =>
-        websocket.sendMessage("{some-illegal_expre")
+        case "illegal-command" =>
+          websocket.sendMessage("{some-illegal_expre")
 
-      case "add-table" =>
-        val table = TableWithoutId("name_" + UUID.randomUUID(), 3)
-        websocket.sendMessage(mapper.writeValueAsString(AddTableRequest(-1, table)))
+        case "add-table" =>
+          val table = TableWithoutId("name_" + UUID.randomUUID(), 3)
+          websocket.sendMessage(mapper.writeValueAsString(AddTableRequest(-1, table)))
 
-      case "update-table" =>
-        val table = Table(splitInputList(1).toLong, "name_" + UUID.randomUUID(), 6)
-        websocket.sendMessage(mapper.writeValueAsString(UpdateTableRequest(table)))
+        case "update-table" =>
+          val table = Table(splitInputList(1).toLong, "name_" + UUID.randomUUID(), 6)
+          websocket.sendMessage(mapper.writeValueAsString(UpdateTableRequest(table)))
 
-      case "remove-table" =>
-        websocket.sendMessage(mapper.writeValueAsString(RemoveTableRequest(splitInputList(1).toLong)))
+        case "remove-table" =>
+          websocket.sendMessage(mapper.writeValueAsString(RemoveTableRequest(splitInputList(1).toLong)))
 
-      case "subscribe" =>
-        websocket.sendMessage(mapper.writeValueAsString(SubscribeTablesRequest()))
+        case "subscribe" =>
+          websocket.sendMessage(mapper.writeValueAsString(SubscribeTablesRequest()))
 
-      case "unsubscribe" =>
-        websocket.sendMessage(mapper.writeValueAsString(UnsubscribeTablesRequest()))
+        case "unsubscribe" =>
+          websocket.sendMessage(mapper.writeValueAsString(UnsubscribeTablesRequest()))
 
-      case _ =>
-        println("Unknown command")
+        case _ =>
+          println("Unknown command")
+      }
+    } match {
+      case Failure(e) =>
+        println("err-----------------")
+        logger.error("Error->", e)
+      case Success(_) =>
     }
   }
 

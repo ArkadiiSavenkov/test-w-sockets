@@ -30,15 +30,17 @@ object WebSocketServer extends App {
   val myFlow: Flow[Message, Message, NotUsed] = Flow.fromGraph(GraphDSL.create() { implicit builder =>
     import akka.stream.scaladsl.GraphDSL.Implicits._
 
-    val start: FlowShape[Message, String] = builder.add(Connectors.flowStart)
-    val finish: FlowShape[String, Message] = builder.add(Connectors.flowFinish)
+    val start: FlowShape[Message, String] = builder.add(ConnectorFlows.flowStart)
+    val finish: FlowShape[String, Message] = builder.add(ConnectorFlows.flowFinish)
 
     def tempFlow = {
       Flow[(Option[User], Model)].map(s => s._2)
     }
 
-    start ~> ModelConvertors.flowStringToModel ~> Authentication(authenticationServer).flow ~> tempFlow ~>
-      MemoryDb(memoryDbActor).flow ~> Subscription(memoryDbActor).flow ~> ModelConvertors.modelToString ~> finish
+    start ~> ModelConvertorFlows.flowStringToModel ~> FilterFlows.entryFlow ~>
+      AuthenticationFlow(authenticationServer).flow ~> AuthorizationFlow.flow ~>
+      MemoryDbFlow(memoryDbActor).flow ~> SubscriptionFlow(memoryDbActor).flow ~>
+      ModelConvertorFlows.modelToString ~> finish
 
     FlowShape(start.in, finish.out)
 

@@ -3,8 +3,8 @@ package org.aas.websocket.graph
 import akka.stream.scaladsl.Flow
 import org.aas.websocket.model._
 
-class Filters {
-  def entryFilter: Flow[Model, Model, Any] = {
+object FilterFlows {
+  def entryFlow: Flow[Model, Model, Any] = {
     Flow[Model].filter { model =>
       model.isInstanceOf[LoginRequest] ||
         model.isInstanceOf[PingRequest] ||

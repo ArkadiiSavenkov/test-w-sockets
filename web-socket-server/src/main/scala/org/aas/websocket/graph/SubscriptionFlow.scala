@@ -17,7 +17,7 @@ object SubscriptionInfo {
   def unapply(arg: SubscriptionInfo): Option[Boolean] = Some(arg.isSubscribe)
 }
 
-class Subscription(ref: ActorRef) {
+class SubscriptionFlow(ref: ActorRef) {
 
   import akka.pattern.ask
 
@@ -30,43 +30,32 @@ class Subscription(ref: ActorRef) {
       m => (subscription -> m) :: Nil
     }.mapConcat {
       case (subscription, subscribeTableRequest@SubscribeTablesRequest()) =>
-        println("1")
         subscription.isSubscribe = true
         subscribeTableRequest :: Nil
       case (subscription, UnsubscribeTablesRequest()) =>
-        println("2")
         subscription.isSubscribe = false
         Nil
       case (SubscriptionInfo(false), TableAddedEvent(_, _)) =>
-        println("3")
         Nil
       case (SubscriptionInfo(false), TableUpdatedEvent(_)) =>
-        println("4")
         Nil
       case (SubscriptionInfo(false), TableRemovedEvent(_)) =>
-        println("5")
         Nil
       case (subscription, other) =>
-        println("6")
         other :: Nil
     }.mapAsync(5) { m =>
       m match {
         case subscribeTablesRequest: SubscribeTablesRequest => {
-          println("7")
           (ref ? subscribeTablesRequest).map(_.asInstanceOf[Model])
         }
         case _ =>
-          println("8")
           Future(m)
       }
-    }.map { m =>
-      println(m)
-      m
     }
   }
 
 }
 
-object Subscription {
-  def apply(ref: ActorRef) = new Subscription(ref)
+object SubscriptionFlow {
+  def apply(ref: ActorRef) = new SubscriptionFlow(ref)
 }

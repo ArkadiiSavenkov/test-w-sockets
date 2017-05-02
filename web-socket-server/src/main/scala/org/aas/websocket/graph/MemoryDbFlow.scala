@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class MemoryDb(ref: ActorRef) {
+class MemoryDbFlow(ref: ActorRef) {
 
   import akka.pattern.ask
 
@@ -25,13 +25,10 @@ class MemoryDb(ref: ActorRef) {
         case removeTableRequest: RemoveTableRequest => (ref ? removeTableRequest).map(_.asInstanceOf[Model])
         case _ => Future(m)
       }
-    }.map { m =>
-      println(s"MemoryDb -> $m")
-      m
     }
   }
 }
 
-object MemoryDb {
-  def apply(ref: ActorRef) = new MemoryDb(ref)
+object MemoryDbFlow {
+  def apply(ref: ActorRef) = new MemoryDbFlow(ref)
 }

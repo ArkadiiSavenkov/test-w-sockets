@@ -16,7 +16,7 @@ private object AuthenticationInfo {
   def unapply(arg: AuthenticationInfo): Option[User] = arg.user
 }
 
-class Authentication(authenticationService: IAuthenticationService) {
+class AuthenticationFlow(authenticationService: IAuthenticationService) {
   def flow: Flow[Model, (Option[User], Model), NotUsed] = {
     Flow[Model].statefulMapConcat { () =>
       val authInfo = new AuthenticationInfo
@@ -41,8 +41,8 @@ class Authentication(authenticationService: IAuthenticationService) {
   }
 }
 
-object Authentication {
-  def apply(authenticationService: IAuthenticationService) = new Authentication(authenticationService)
+object AuthenticationFlow {
+  def apply(authenticationService: IAuthenticationService) = new AuthenticationFlow(authenticationService)
 }
 
 
