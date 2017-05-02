@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As
   new Type(value = classOf[LoginFailedResponse], name="login_failed"),
   new Type(value = classOf[PongResponse], name = "pong"),
   new Type(value = classOf[NotAuthorizedResponse], name = "not_authorized"),
+  new Type(value = classOf[NotAuthenticateResponse], name = "not_authenticate"),
   new Type(value = classOf[TableListResponse], name = "table_list"),
   new Type(value = classOf[RemovalFailedResponse], name = "removal_failed"),
   new Type(value = classOf[UpdateFailedResponse], name = "update_failed"),
@@ -70,6 +71,8 @@ case class LoginFailedResponse() extends Model
 case class PongResponse(seq: Int) extends Model
 
 case class NotAuthorizedResponse() extends Model
+
+case class NotAuthenticateResponse() extends Model
 
 case class TableListResponse(tables: List[Table]) extends Model
 

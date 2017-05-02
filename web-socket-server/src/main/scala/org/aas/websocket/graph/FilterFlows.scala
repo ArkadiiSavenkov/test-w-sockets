@@ -15,4 +15,16 @@ object FilterFlows {
         model.isInstanceOf[RemoveTableRequest]
     }
   }
+
+  private def isModelEvent(model : Model) = {
+    model.isInstanceOf[TableAddedEvent] || model.isInstanceOf[TableRemovedEvent] || model.isInstanceOf[TableUpdatedEvent]
+  }
+
+  def filterEvents = {
+    Flow[Model].filter(m => isModelEvent(m))
+  }
+
+  def filterNotEvents = {
+    Flow[Model].filterNot(m => isModelEvent(m))
+  }
 }

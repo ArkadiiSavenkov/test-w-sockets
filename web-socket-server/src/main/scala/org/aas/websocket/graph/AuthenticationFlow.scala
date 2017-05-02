@@ -37,8 +37,8 @@ class AuthenticationFlow(authenticationService: IAuthenticationService) {
       case (AuthenticationInfo(user), model) =>
         (Some(user), model) :: Nil
 
-      case (auth, p@PongResponse(seq)) => (None, p) :: Nil
-      case _ => Nil
+      case (auth, p@PongResponse(_)) => (None, p) :: Nil
+      case _ => (None, NotAuthenticateResponse()) :: Nil
     }
   }
 }

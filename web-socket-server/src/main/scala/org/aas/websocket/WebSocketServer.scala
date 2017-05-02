@@ -6,8 +6,8 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.Message
 import akka.http.scaladsl.server.Directives.{handleWebSocketMessages, path}
 import akka.stream.Supervision.Decider
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, FlowShape, Supervision}
-import akka.stream.scaladsl.{Flow, GraphDSL}
+import akka.stream._
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge}
 import org.aas.websocket.actor.MemoryDbActor
 import org.aas.websocket.graph._
 import org.aas.websocket.model.{Model, PingRequest, PongResponse}
@@ -40,10 +40,18 @@ object WebSocketServer extends App {
       }
     }
 
+    val broadcast: UniformFanOutShape[Model, Model] = builder.add(Broadcast[Model](2))
+    val merge: UniformFanInShape[Model, Model] = builder.add(Merge[Model](2))
+
+
+
     start ~> ModelConvertorFlows.flowStringToModel ~> FilterFlows.entryFlow ~> pingPongFlow ~>
       AuthenticationFlow(authenticationServer).flow ~> AuthorizationFlow.flow ~>
-      MemoryDbFlow(memoryDbActor).flow ~> SubscriptionFlow(memoryDbActor).flow ~>
-      ModelConvertorFlows.modelToString ~> finish
+      MemoryDbFlow(memoryDbActor).flow ~>
+      broadcast ~> FilterFlows.filterEvents ~> TableEventsBusFlow.busFlow ~> merge ~>
+      SubscriptionFlow(memoryDbActor).flow ~> ModelConvertorFlows.modelToString ~> finish
+
+    broadcast ~> FilterFlows.filterNotEvents ~> merge
 
     FlowShape(start.in, finish.out)
 
@@ -52,7 +60,7 @@ object WebSocketServer extends App {
   val route = path("ws")(handleWebSocketMessages(myFlow))
   val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
 
-  println(s"WebSocketServer started at http://localhost:8080/  \nFor quit server please press ENTER")
+  println(s"WebSocketServer started at http://localhost:8080/  \nIf you press ENTER the server should shut down (I hope)")
   StdIn.readLine()
 
   bindingFuture

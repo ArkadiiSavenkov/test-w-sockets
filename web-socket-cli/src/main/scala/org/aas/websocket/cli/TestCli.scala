@@ -23,7 +23,8 @@ object TestCli extends App with LazyLogging {
     .execute(new WebSocketUpgradeHandler.Builder().addWebSocketListener(
       new WebSocketTextListener() {
         override def onMessage(message: String): Unit = {
-          println(message)
+          if (!(mapper.readValue(message, classOf[Model])).isInstanceOf[PongResponse])
+            println(message)
         }
 
         override def onError(t: Throwable): Unit = {
@@ -42,8 +43,9 @@ object TestCli extends App with LazyLogging {
     websocket.sendMessage(mapper.writeValueAsString(model))
   }
 
-  //temporary solution - i don't know now how hold the ws connection
-  new Timer().schedule(new TimerTask {
+  //temporary solution - i don't know (now) how hold the ws connection
+  val timer = new Timer()
+  timer.schedule(new TimerTask {
     override def run() = {
       sendMessage(PingRequest(1))
     }
@@ -96,6 +98,7 @@ object TestCli extends App with LazyLogging {
     }
   }
 
+  timer.cancel()
   websocket.close()
   asyncHttpClient.close()
 
@@ -112,8 +115,8 @@ object TestCli extends App with LazyLogging {
          |  add-table - insert random table
          |  update-table id - update table with id
          |  remove-table id - remove table with id
-         |  subscribe - subscribe to notifications about changes in tables
-         |  unsubscribe - unsubscribe from notifications about changes in tables
+         |  subscribe - subscribe to changes in tables notifications
+         |  unsubscribe - unsubscribe from changes in tables notifications
          """.stripMargin)
   }
 }
