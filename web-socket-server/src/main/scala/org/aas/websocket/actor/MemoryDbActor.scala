@@ -8,12 +8,13 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 class MemoryDbActor extends Actor {
-  var list: ArrayBuffer[Table]
+  var list: ArrayBuffer[Table] = ArrayBuffer()
   var id: Long = 0
 
   override def receive: Receive = {
     case AddTableRequest(afterId, tableWithoutId) =>
-      val newTable = Table(id ++, tableWithoutId.name, tableWithoutId.participants)
+      val newTable = Table(id, tableWithoutId.name, tableWithoutId.participants)
+      id += 1
       list.insert(list.indexWhere(t => t.id == afterId), newTable)
 
     case UpdateTableRequest(requestTable) =>

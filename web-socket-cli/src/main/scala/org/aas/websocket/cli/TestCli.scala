@@ -1,8 +1,10 @@
 package org.aas.websocket.cli
 
+import java.util.UUID
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import org.aas.websocket.model.LoginRequest
+import org.aas.websocket.model.{AddTableRequest, LoginRequest, TableWithoutId}
 import org.asynchttpclient.ws.{WebSocket, WebSocketTextListener, WebSocketUpgradeHandler}
 import org.asynchttpclient.{AsyncHttpClient, DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig}
 
@@ -59,6 +61,10 @@ object TestCli extends App {
       case "illegal_command" =>
         websocket.sendMessage("{some-illegal_expre")
 
+      case "insert_table" =>
+        val table = TableWithoutId("name_" + UUID.randomUUID(), 3)
+        websocket.sendMessage(mapper.writeValueAsString(AddTableRequest(-1, table)))
+
       case _ =>
         println("Unknown command")
     }
@@ -77,6 +83,7 @@ object TestCli extends App {
          |  login_user - login as ordinary user
          |  login_illegal - login with wrong password
          |  illegal_command - send corrupt object
+         |  insert_table - insert random table
        """.stripMargin)
   }
 }
