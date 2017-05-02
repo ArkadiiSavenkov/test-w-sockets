@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.{JsonSubTypes, JsonTypeInfo, JsonTypeName}
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = As.PROPERTY, property = "@type")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = As.PROPERTY, property = "$type")
 @JsonSubTypes(Array(
   //---------Requests---------------------------------------------------------------
   new Type(value = classOf[LoginRequest], name="login"),
@@ -37,7 +37,7 @@ case class TableWithoutId
 
 case class Table
 (
-  id: String,
+  id: Long,
   name: String,
   participants: Int
 )
@@ -54,13 +54,13 @@ case class UnsubscribeTablesRequest() extends Model
 
 case class AddTableRequest
 (
-  afterId: Int,
+  afterId: Long,
   table: TableWithoutId
 ) extends Model
 
 case class UpdateTableRequest(table: Table) extends Model
 
-case class RemoveTableRequest(id: Int) extends Model
+case class RemoveTableRequest(id: Long) extends Model
 
 //---------Responses--------------------------------------------------------------
 case class LoginSuccessfulResponse(userType: String) extends Model
@@ -73,22 +73,22 @@ case class NotAuthorizedResponse() extends Model
 
 case class TableListResponse(tables: List[Table]) extends Model
 
-case class RemovalFailedResponse(id: Int) extends Model
+case class RemovalFailedResponse(id: Long) extends Model
 
-case class UpdateFailedResponse(id: Int) extends Model
+case class UpdateFailedResponse(id: Long) extends Model
 
 
 //---------Events-----------------------------------------------------------------
 
 case class TableAddedEvent
 (
-  afterId: Int,
+  afterId: Long,
   table: Table
 ) extends Model
 
 case class TableUpdatedEvent(table: Table) extends Model
 
-case class TableRemovedEvent(id: Int) extends Model
+case class TableRemovedEvent(id: Long) extends Model
 
 
 

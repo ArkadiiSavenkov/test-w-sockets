@@ -41,16 +41,24 @@ object TestCli extends App {
     val inputLine = StdIn.readLine()
     inputLine match {
       case "exit" => break = true
+
       case "help" => showHelp
+
       case "login_admin" =>
         val loginRequest = LoginRequest("admin", "admin")
         websocket.sendMessage(mapper.writeValueAsString(loginRequest))
+
       case "login_user" =>
         val loginRequest = LoginRequest("user", "password")
         websocket.sendMessage(mapper.writeValueAsString(loginRequest))
+
       case "login_illegal" =>
         val loginRequest = LoginRequest("user", "password_illegal")
         websocket.sendMessage(mapper.writeValueAsString(loginRequest))
+
+      case "illegal_command" =>
+        websocket.sendMessage("{some-illegal_expre")
+
       case _ =>
         println("Unknown command")
     }
@@ -68,6 +76,7 @@ object TestCli extends App {
          |  login_admin - login as admin
          |  login_user - login as ordinary user
          |  login_illegal - login with wrong password
+         |  illegal_command - send corrupt object
        """.stripMargin)
   }
 }

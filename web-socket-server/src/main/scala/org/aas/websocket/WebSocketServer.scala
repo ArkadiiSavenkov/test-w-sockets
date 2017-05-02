@@ -1,12 +1,14 @@
 package org.aas.websocket
 
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.Message
 import akka.http.scaladsl.server.Directives.{handleWebSocketMessages, path}
-import akka.stream.{ActorMaterializer, FlowShape}
+import akka.stream.Supervision.Decider
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings, FlowShape, Supervision}
 import akka.stream.scaladsl.{Flow, GraphDSL}
+import org.aas.websocket.actor.MemoryDbActor
 import org.aas.websocket.graph.{Authentication, Connectors, ModelConvertors}
 import org.aas.websocket.model.Model
 import org.aas.websocket.service.{AuthenticationService, IAuthenticationService, User}
@@ -15,8 +17,12 @@ import scala.io.StdIn
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object WebSocketServer extends App {
-  implicit val system = ActorSystem("example")
-  implicit val materializer = ActorMaterializer()
+  implicit val actorSystem = ActorSystem("example")
+  implicit val materializer = ActorMaterializer(ActorMaterializerSettings(actorSystem)
+    .withSupervisionStrategy(Supervision.resumingDecider.asInstanceOf[Decider]))
+
+  val memoryDbActor: ActorRef = actorSystem.actorOf(Props[MemoryDbActor], "MemoryDbActor")
+
 
   val users = List(User("admin", "admin", "admin"), User("user", "password", "user"))
   val authenticationServer: IAuthenticationService = new AuthenticationService(users)
@@ -45,5 +51,5 @@ object WebSocketServer extends App {
 
   bindingFuture
     .flatMap(_.unbind())
-    .onComplete(_ ⇒ system.terminate())
+    .onComplete(_ ⇒ actorSystem.terminate())
 }
