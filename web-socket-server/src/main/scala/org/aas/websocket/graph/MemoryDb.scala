@@ -1,5 +1,6 @@
 package org.aas.websocket.graph
 
+import akka.NotUsed
 import akka.actor.ActorRef
 import akka.stream.scaladsl.Flow
 import akka.util.Timeout
@@ -16,16 +17,17 @@ class MemoryDb(ref: ActorRef) {
 
   implicit val askTimeout = Timeout(30 seconds)
 
-  def flow = {
+  def flow: Flow[Model, Model, NotUsed] = {
     Flow[Model].mapAsync(5) { m =>
-
-      Future((m match {
-        case addTableRequest: AddTableRequest => ref ? addTableRequest
-        case updateTableRequest: UpdateTableRequest => ref ? updateTableRequest
-        case removeTableRequest: RemoveTableRequest => ref ? removeTableRequest
-        case subscribeTablesRequest: SubscribeTablesRequest => ref ? subscribeTablesRequest
-        case _ => m
-      }).asInstanceOf[Model])
+      m match {
+        case addTableRequest: AddTableRequest => (ref ? addTableRequest).map(_.asInstanceOf[Model])
+        case updateTableRequest: UpdateTableRequest => (ref ? updateTableRequest).map(_.asInstanceOf[Model])
+        case removeTableRequest: RemoveTableRequest => (ref ? removeTableRequest).map(_.asInstanceOf[Model])
+        case _ => Future(m)
+      }
+    }.map { m =>
+      println(s"MemoryDb -> $m")
+      m
     }
   }
 }

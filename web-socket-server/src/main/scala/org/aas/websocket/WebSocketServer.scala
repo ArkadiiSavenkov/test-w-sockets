@@ -9,7 +9,7 @@ import akka.stream.Supervision.Decider
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, FlowShape, Supervision}
 import akka.stream.scaladsl.{Flow, GraphDSL}
 import org.aas.websocket.actor.MemoryDbActor
-import org.aas.websocket.graph.{Authentication, Connectors, MemoryDb, ModelConvertors}
+import org.aas.websocket.graph._
 import org.aas.websocket.model.Model
 import org.aas.websocket.service.{AuthenticationService, IAuthenticationService, User}
 
@@ -32,14 +32,13 @@ object WebSocketServer extends App {
 
     val start: FlowShape[Message, String] = builder.add(Connectors.flowStart)
     val finish: FlowShape[String, Message] = builder.add(Connectors.flowFinish)
-    val auth = builder.add(Authentication(authenticationServer).flow)
 
     def tempFlow = {
       Flow[(Option[User], Model)].map(s => s._2)
     }
 
-    start ~> ModelConvertors.flowStringToModel ~> auth ~> tempFlow ~>
-      MemoryDb(memoryDbActor).flow ~> ModelConvertors.modelToString ~> finish
+    start ~> ModelConvertors.flowStringToModel ~> Authentication(authenticationServer).flow ~> tempFlow ~>
+      MemoryDb(memoryDbActor).flow ~> Subscription(memoryDbActor).flow ~> ModelConvertors.modelToString ~> finish
 
     FlowShape(start.in, finish.out)
 

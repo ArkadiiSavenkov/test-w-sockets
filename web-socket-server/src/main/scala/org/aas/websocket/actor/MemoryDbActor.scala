@@ -16,7 +16,7 @@ class MemoryDbActor extends Actor {
     case UpdateTableRequest(requestTable) =>
       list.update(requestTable) match {
         case -\/(id) => sender() ! UpdateFailedResponse(id)
-        case \/-(table) => TableUpdatedEvent(table)
+        case \/-(table) => sender() ! TableUpdatedEvent(table)
       }
 
     case RemoveTableRequest(tableId) =>

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import org.aas.websocket.model.{AddTableRequest, LoginRequest, TableWithoutId}
+import org.aas.websocket.model._
 import org.asynchttpclient.ws.{WebSocket, WebSocketTextListener, WebSocketUpgradeHandler}
 import org.asynchttpclient.{AsyncHttpClient, DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig}
 
@@ -41,29 +41,43 @@ object TestCli extends App {
   var break = false
   while (!break) {
     val inputLine = StdIn.readLine()
-    inputLine match {
+    val splitInputList: Array[String] = inputLine.split(" ")
+    splitInputList(0) match {
       case "exit" => break = true
 
       case "help" => showHelp
 
-      case "login_admin" =>
+      case "login-admin" =>
         val loginRequest = LoginRequest("admin", "admin")
         websocket.sendMessage(mapper.writeValueAsString(loginRequest))
 
-      case "login_user" =>
+      case "login-user" =>
         val loginRequest = LoginRequest("user", "password")
         websocket.sendMessage(mapper.writeValueAsString(loginRequest))
 
-      case "login_illegal" =>
+      case "login-illegal" =>
         val loginRequest = LoginRequest("user", "password_illegal")
         websocket.sendMessage(mapper.writeValueAsString(loginRequest))
 
-      case "illegal_command" =>
+      case "illegal-command" =>
         websocket.sendMessage("{some-illegal_expre")
 
-      case "insert_table" =>
+      case "add-table" =>
         val table = TableWithoutId("name_" + UUID.randomUUID(), 3)
         websocket.sendMessage(mapper.writeValueAsString(AddTableRequest(-1, table)))
+
+      case "update-table" =>
+        val table = Table(splitInputList(1).toLong, "name_" + UUID.randomUUID(), 6)
+        websocket.sendMessage(mapper.writeValueAsString(UpdateTableRequest(table)))
+
+      case "remove-table" =>
+        websocket.sendMessage(mapper.writeValueAsString(RemoveTableRequest(splitInputList(1).toLong)))
+
+      case "subscribe" =>
+        websocket.sendMessage(mapper.writeValueAsString(SubscribeTablesRequest()))
+
+      case "unsubscribe" =>
+        websocket.sendMessage(mapper.writeValueAsString(UnsubscribeTablesRequest()))
 
       case _ =>
         println("Unknown command")
@@ -79,11 +93,15 @@ object TestCli extends App {
          |Use the next commands
          |  help - help
          |  exit - exit the program
-         |  login_admin - login as admin
-         |  login_user - login as ordinary user
-         |  login_illegal - login with wrong password
-         |  illegal_command - send corrupt object
-         |  insert_table - insert random table
-       """.stripMargin)
+         |  login-admin - login as admin
+         |  login-user - login as ordinary user
+         |  login-illegal - login with wrong password
+         |  illegal-command - send corrupt object
+         |  add-table - insert random table
+         |  update-table id - update table with id
+         |  remove-table id - remove table with id
+         |  subscribe - subscribe to notifications about changes in tables
+         |  unsubscribe - unsubscribe from notifications about changes in tables
+         """.stripMargin)
   }
 }
