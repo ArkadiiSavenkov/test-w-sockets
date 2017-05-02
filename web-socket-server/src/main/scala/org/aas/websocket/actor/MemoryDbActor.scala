@@ -1,39 +1,31 @@
 package org.aas.websocket.actor
 
 import akka.actor.Actor
-import akka.actor.Actor.Receive
 import org.aas.websocket.model._
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scalaz.{-\/, \/-}
 
 class MemoryDbActor extends Actor {
-  var list: ArrayBuffer[Table] = ArrayBuffer()
-  var id: Long = 0
+  val list: ListTableBuffer = new ListTableBuffer
 
   override def receive: Receive = {
     case AddTableRequest(afterId, tableWithoutId) =>
-      val newTable = Table(id, tableWithoutId.name, tableWithoutId.participants)
-      id += 1
-      list.insert(list.indexWhere(t => t.id == afterId), newTable)
+      val table = list.insert(afterId, tableWithoutId)
+      sender() ! TableAddedEvent(afterId, table)
 
     case UpdateTableRequest(requestTable) =>
-      list.indexWhere(t => t.id == requestTable.id) match {
-        case -1 => sender ! UpdateFailedResponse(requestTable.id)
-        case findIndex =>
-          list.update(findIndex, requestTable)
-          sender() ! TableUpdatedEvent(requestTable)
+      list.update(requestTable) match {
+        case -\/(id) => sender() ! UpdateFailedResponse(id)
+        case \/-(table) => TableUpdatedEvent(table)
       }
 
-    case RemoveTableRequest(id) =>
-      list.indexWhere(t => t.id == id) match {
-        case -1 => sender() ! RemovalFailedResponse(id)
-        case findIndex =>
-          list.remove(findIndex)
-          sender() ! TableRemovedEvent(id)
+    case RemoveTableRequest(tableId) =>
+      list.removeTable(tableId) match {
+        case -\/(id) => sender() ! RemovalFailedResponse(id)
+        case \/-(table) => sender() ! TableRemovedEvent(tableId)
       }
 
     case _: SubscribeTablesRequest =>
-      sender() ! TableListResponse(list.toList)
+      sender() ! TableListResponse(list.all)
   }
 }

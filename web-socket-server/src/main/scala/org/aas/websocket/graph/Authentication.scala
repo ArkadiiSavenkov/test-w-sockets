@@ -9,7 +9,7 @@ import scalaz.{-\/, \/-}
 
 private class AuthenticationInfo
 (
-  @volatile var user: Option[User]
+  @volatile var user: Option[User] = None
 )
 
 private object AuthenticationInfo {
@@ -20,7 +20,8 @@ class Authentication(authenticationService: IAuthenticationService) {
   def flow: Flow[Model, (Option[User], Model), NotUsed] = {
     Flow[Model].statefulMapConcat { () =>
       println("new Authentication")
-      m => (new AuthenticationInfo(None) -> m) :: Nil
+      val authInfo = new AuthenticationInfo
+      m => (authInfo -> m) :: Nil
     }.mapConcat {
       case (authentication, LoginRequest(userName, password)) =>
         authenticationService.authenticate(userName, password) match {
@@ -33,10 +34,6 @@ class Authentication(authenticationService: IAuthenticationService) {
             authentication.user = None
             (None, LoginFailedResponse()) :: Nil
         }
-      case (authentication, model) =>
-        println("(authentication, model)")
-        println(authentication.user)
-        Nil
       case (AuthenticationInfo(user), model) =>
         println("AuthenticationInfo(user), model)")
         (Some(user), model) :: Nil
