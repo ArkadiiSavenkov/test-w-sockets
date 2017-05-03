@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As
   new Type(value = classOf[TableUpdatedEvent], name = "table_updated"),
   new Type(value = classOf[TableRemovedEvent], name="table_removed")
 ))
-trait Model {}
+trait Parcel {}
 
 case class TableWithoutId
 (
@@ -45,40 +45,40 @@ case class Table
 
 //---------Requests---------------------------------------------------------------
 
-case class LoginRequest(userName: String, password: String) extends Model
+case class LoginRequest(userName: String, password: String) extends Parcel
 
-case class PingRequest(seq: Int) extends Model
+case class PingRequest(seq: Int) extends Parcel
 
-case class SubscribeTablesRequest() extends Model
+case class SubscribeTablesRequest() extends Parcel
 
-case class UnsubscribeTablesRequest() extends Model
+case class UnsubscribeTablesRequest() extends Parcel
 
 case class AddTableRequest
 (
   afterId: Long,
   table: TableWithoutId
-) extends Model
+) extends Parcel
 
-case class UpdateTableRequest(table: Table) extends Model
+case class UpdateTableRequest(table: Table) extends Parcel
 
-case class RemoveTableRequest(id: Long) extends Model
+case class RemoveTableRequest(id: Long) extends Parcel
 
 //---------Responses--------------------------------------------------------------
-case class LoginSuccessfulResponse(userType: String) extends Model
+case class LoginSuccessfulResponse(userType: String) extends Parcel
 
-case class LoginFailedResponse() extends Model
+case class LoginFailedResponse() extends Parcel
 
-case class PongResponse(seq: Int) extends Model
+case class PongResponse(seq: Int) extends Parcel
 
-case class NotAuthorizedResponse() extends Model
+case class NotAuthorizedResponse() extends Parcel
 
-case class NotAuthenticateResponse() extends Model
+case class NotAuthenticateResponse() extends Parcel
 
-case class TableListResponse(tables: List[Table]) extends Model
+case class TableListResponse(tables: List[Table]) extends Parcel
 
-case class RemovalFailedResponse(id: Long) extends Model
+case class RemovalFailedResponse(id: Long) extends Parcel
 
-case class UpdateFailedResponse(id: Long) extends Model
+case class UpdateFailedResponse(id: Long) extends Parcel
 
 
 //---------Events-----------------------------------------------------------------
@@ -87,11 +87,11 @@ case class TableAddedEvent
 (
   afterId: Long,
   table: Table
-) extends Model
+) extends Parcel
 
-case class TableUpdatedEvent(table: Table) extends Model
+case class TableUpdatedEvent(table: Table) extends Parcel
 
-case class TableRemovedEvent(id: Long) extends Model
+case class TableRemovedEvent(id: Long) extends Parcel
 
 
 

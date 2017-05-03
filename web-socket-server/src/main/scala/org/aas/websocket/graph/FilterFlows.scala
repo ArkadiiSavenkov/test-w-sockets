@@ -1,30 +1,31 @@
 package org.aas.websocket.graph
 
+import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import org.aas.websocket.model._
 
 object FilterFlows {
-  def entryFlow: Flow[Model, Model, Any] = {
-    Flow[Model].filter { model =>
-      model.isInstanceOf[LoginRequest] ||
-        model.isInstanceOf[PingRequest] ||
-        model.isInstanceOf[SubscribeTablesRequest] ||
-        model.isInstanceOf[UnsubscribeTablesRequest] ||
-        model.isInstanceOf[AddTableRequest] ||
-        model.isInstanceOf[UpdateTableRequest] ||
-        model.isInstanceOf[RemoveTableRequest]
+  def entryFlow: Flow[Parcel, Parcel, Any] = {
+    Flow[Parcel].filter { parcel =>
+      parcel.isInstanceOf[LoginRequest] ||
+        parcel.isInstanceOf[PingRequest] ||
+        parcel.isInstanceOf[SubscribeTablesRequest] ||
+        parcel.isInstanceOf[UnsubscribeTablesRequest] ||
+        parcel.isInstanceOf[AddTableRequest] ||
+        parcel.isInstanceOf[UpdateTableRequest] ||
+        parcel.isInstanceOf[RemoveTableRequest]
     }
   }
 
-  private def isModelEvent(model : Model) = {
-    model.isInstanceOf[TableAddedEvent] || model.isInstanceOf[TableRemovedEvent] || model.isInstanceOf[TableUpdatedEvent]
+  private def isParcelEvent(parcel : Parcel) = {
+    parcel.isInstanceOf[TableAddedEvent] || parcel.isInstanceOf[TableRemovedEvent] || parcel.isInstanceOf[TableUpdatedEvent]
   }
 
-  def filterEvents = {
-    Flow[Model].filter(m => isModelEvent(m))
+  def filterEvents: Flow[Parcel, Parcel, NotUsed] = {
+    Flow[Parcel].filter(m => isParcelEvent(m))
   }
 
-  def filterNotEvents = {
-    Flow[Model].filterNot(m => isModelEvent(m))
+  def filterNotEvents: Flow[Parcel, Parcel, NotUsed] = {
+    Flow[Parcel].filterNot(m => isParcelEvent(m))
   }
 }

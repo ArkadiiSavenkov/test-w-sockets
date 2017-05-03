@@ -1,5 +1,6 @@
 package org.aas.websocket.graph
 
+import akka.NotUsed
 import akka.actor.ActorRef
 import akka.stream.scaladsl.Flow
 import akka.util.Timeout
@@ -24,33 +25,35 @@ class SubscriptionFlow(ref: ActorRef) {
   implicit val askTimeout = Timeout(30 seconds)
 
 
-  def flow = {
-    Flow[Model].statefulMapConcat { () =>
+  def flow: Flow[Parcel, Parcel, NotUsed] = {
+    Flow[Parcel].statefulMapConcat { () =>
       val subscription = new SubscriptionInfo
       m => (subscription -> m) :: Nil
     }.mapConcat {
       case (subscription, subscribeTableRequest@SubscribeTablesRequest()) =>
         subscription.isSubscribe = true
         subscribeTableRequest :: Nil
+
       case (subscription, UnsubscribeTablesRequest()) =>
         subscription.isSubscribe = false
         Nil
+
       case (SubscriptionInfo(false), TableAddedEvent(_, _)) =>
         Nil
+
       case (SubscriptionInfo(false), TableUpdatedEvent(_)) =>
         Nil
+
       case (SubscriptionInfo(false), TableRemovedEvent(_)) =>
         Nil
+
       case (subscription, other) =>
         other :: Nil
-    }.mapAsync(5) { m =>
-      m match {
-        case subscribeTablesRequest: SubscribeTablesRequest => {
-          (ref ? subscribeTablesRequest).map(_.asInstanceOf[Model])
-        }
-        case _ =>
-          Future(m)
-      }
+    }.mapAsync(5) {
+      case subscribeTablesRequest: SubscribeTablesRequest =>
+        (ref ? subscribeTablesRequest).map(_.asInstanceOf[Parcel])
+
+      case m => Future(m)
     }
   }
 

@@ -6,7 +6,7 @@ import scala.collection.mutable.ArrayBuffer
 import scalaz.{-\/, \/, \/-}
 
 private[actor] class ListTableBuffer {
-  private var list: ArrayBuffer[Table] = ArrayBuffer()
+  private val list: ArrayBuffer[Table] = ArrayBuffer()
   private var genetatedId: Long = 0
 
   def insert(afterId: Long, tableWithoutId: TableWithoutId): Table = {

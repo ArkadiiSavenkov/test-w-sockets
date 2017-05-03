@@ -15,14 +15,14 @@ class MemoryDbActor extends Actor {
 
     case UpdateTableRequest(requestTable) =>
       list.update(requestTable) match {
-        case -\/(error) => sender() ! UpdateFailedResponse(requestTable.id)
+        case -\/(_) => sender() ! UpdateFailedResponse(requestTable.id)
         case \/-(table) => sender() ! TableUpdatedEvent(table)
       }
 
     case RemoveTableRequest(tableId) =>
       list.removeTable(tableId) match {
-        case -\/(error) => sender() ! RemovalFailedResponse(tableId)
-        case \/-(table) => sender() ! TableRemovedEvent(tableId)
+        case -\/(_) => sender() ! RemovalFailedResponse(tableId)
+        case \/-(_) => sender() ! TableRemovedEvent(tableId)
       }
 
     case _: SubscribeTablesRequest =>

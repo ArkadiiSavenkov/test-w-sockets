@@ -17,8 +17,8 @@ private object AuthenticationInfo {
 }
 
 class AuthenticationFlow(authenticationService: IAuthenticationService) {
-  def flow: Flow[Model, (Option[User], Model), NotUsed] = {
-    Flow[Model].statefulMapConcat { () =>
+  def flow: Flow[Parcel, (Option[User], Parcel), NotUsed] = {
+    Flow[Parcel].statefulMapConcat { () =>
       val authInfo = new AuthenticationInfo
       m => (authInfo -> m) :: Nil
     }.mapConcat {
@@ -30,14 +30,14 @@ class AuthenticationFlow(authenticationService: IAuthenticationService) {
               (Some(user), LoginSuccessfulResponse(user.userType)) :: (Some(user), SubscribeTablesRequest()) :: Nil
             else
               (Some(user), UnsubscribeTablesRequest()) :: (Some(user), LoginSuccessfulResponse(user.userType)) :: Nil
-          case -\/(error) =>
+          case -\/(_) =>
             authentication.user = None
             (None, LoginFailedResponse()) :: Nil
         }
-      case (AuthenticationInfo(user), model) =>
-        (Some(user), model) :: Nil
+      case (AuthenticationInfo(user), parcel) =>
+        (Some(user), parcel) :: Nil
 
-      case (auth, p@PongResponse(_)) => (None, p) :: Nil
+      case (_, p@PongResponse(_)) => (None, p) :: Nil
       case _ => (None, NotAuthenticateResponse()) :: Nil
     }
   }

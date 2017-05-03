@@ -23,7 +23,7 @@ object TestCli extends App with LazyLogging {
     .execute(new WebSocketUpgradeHandler.Builder().addWebSocketListener(
       new WebSocketTextListener() {
         override def onMessage(message: String): Unit = {
-          if (!(mapper.readValue(message, classOf[Model])).isInstanceOf[PongResponse])
+          if (!(mapper.readValue(message, classOf[Parcel])).isInstanceOf[PongResponse])
             println(message)
         }
 
@@ -39,7 +39,7 @@ object TestCli extends App with LazyLogging {
         }
       }).build()).get();
 
-  private def sendMessage(model: Model) = {
+  private def sendMessage(model: Parcel) = {
     websocket.sendMessage(mapper.writeValueAsString(model))
   }
 
@@ -102,7 +102,7 @@ object TestCli extends App with LazyLogging {
   websocket.close()
   asyncHttpClient.close()
 
-  def showHelp = {
+  private def showHelp = {
     println(
       s"""
          |Use the next commands

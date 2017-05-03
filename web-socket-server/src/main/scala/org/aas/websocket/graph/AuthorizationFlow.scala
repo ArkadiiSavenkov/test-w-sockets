@@ -5,17 +5,17 @@ import org.aas.websocket.model._
 import org.aas.websocket.service.User
 
 object AuthorizationFlow {
-  private def isAdminCommand(model: Model): Boolean = {
-    model.isInstanceOf[AddTableRequest] || model.isInstanceOf[RemoveTableRequest] || model.isInstanceOf[UpdateTableRequest]
+  private def isAdminCommand(parcel: Parcel): Boolean = {
+    parcel.isInstanceOf[AddTableRequest] || parcel.isInstanceOf[RemoveTableRequest] || parcel.isInstanceOf[UpdateTableRequest]
   }
 
-  def flow: Flow[(Option[User], Model), Model, Any] = {
-    Flow[(Option[User], Model)].mapConcat {
-      case (Some(user), model) => {
-        if (isAdminCommand(model) && (user.userName != "admin")) NotAuthorizedResponse() :: Nil
-        else model :: Nil
-      }
-      case (_, model) => model :: Nil
+  def flow: Flow[(Option[User], Parcel), Parcel, Any] = {
+    Flow[(Option[User], Parcel)].mapConcat {
+      case (Some(user), parcel) =>
+        if (isAdminCommand(parcel) && (user.userName != "admin")) NotAuthorizedResponse() :: Nil
+        else parcel :: Nil
+
+      case (_, parcel) => parcel :: Nil
     }
   }
 }

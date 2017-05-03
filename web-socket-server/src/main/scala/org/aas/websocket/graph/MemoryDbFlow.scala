@@ -17,14 +17,12 @@ class MemoryDbFlow(ref: ActorRef) {
 
   implicit val askTimeout = Timeout(30 seconds)
 
-  def flow: Flow[Model, Model, NotUsed] = {
-    Flow[Model].mapAsync(5) { m =>
-      m match {
-        case addTableRequest: AddTableRequest => (ref ? addTableRequest).map(_.asInstanceOf[Model])
-        case updateTableRequest: UpdateTableRequest => (ref ? updateTableRequest).map(_.asInstanceOf[Model])
-        case removeTableRequest: RemoveTableRequest => (ref ? removeTableRequest).map(_.asInstanceOf[Model])
-        case _ => Future(m)
-      }
+  def flow: Flow[Parcel, Parcel, NotUsed] = {
+    Flow[Parcel].mapAsync(5) {
+      case addTableRequest: AddTableRequest => (ref ? addTableRequest).map(_.asInstanceOf[Parcel])
+      case updateTableRequest: UpdateTableRequest => (ref ? updateTableRequest).map(_.asInstanceOf[Parcel])
+      case removeTableRequest: RemoveTableRequest => (ref ? removeTableRequest).map(_.asInstanceOf[Parcel])
+      case m => Future(m)
     }
   }
 }

@@ -51,7 +51,7 @@ class ListTableBufferTest extends FunSuite with Matchers {
     list.insert(-1, tableWithoutId01)
 
     list.removeTable(0).map(t => TableWithoutId(t.name, t.participants)) should be ( \/-(tableWithoutId00))
-    list.removeTable(234) should be ( -\/(234))
+    assert( list.removeTable(234).isLeft )
     list.removeTable(1).map(t => TableWithoutId(t.name, t.participants)) should be ( \/-(tableWithoutId01))
   }
 
@@ -66,7 +66,7 @@ class ListTableBufferTest extends FunSuite with Matchers {
 
     val table = Table(0, "new name", 777 )
     list.update(table) should be (\/-(table))
-    list.update(Table(345, "new name", 453)) should be (-\/(345))
+    assert( list.update(Table(345, "new name", 453)).isLeft )
   }
 
 }

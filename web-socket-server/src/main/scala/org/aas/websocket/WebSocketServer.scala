@@ -10,7 +10,7 @@ import akka.stream._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge}
 import org.aas.websocket.actor.MemoryDbActor
 import org.aas.websocket.graph._
-import org.aas.websocket.model.{Model, PingRequest, PongResponse}
+import org.aas.websocket.model.{Parcel, PingRequest, PongResponse}
 import org.aas.websocket.service.{AuthenticationService, IAuthenticationService, User}
 
 import scala.io.StdIn
@@ -33,23 +33,16 @@ object WebSocketServer extends App {
     val start: FlowShape[Message, String] = builder.add(ConnectorFlows.flowStart)
     val finish: FlowShape[String, Message] = builder.add(ConnectorFlows.flowFinish)
 
-    def pingPongFlow: Flow[Model, Model, Any] = {
-      Flow[Model].map {
-        case ping: PingRequest => PongResponse(ping.seq)
-        case x => x
-      }
-    }
-
-    val broadcast: UniformFanOutShape[Model, Model] = builder.add(Broadcast[Model](2))
-    val merge: UniformFanInShape[Model, Model] = builder.add(Merge[Model](2))
+    val broadcast: UniformFanOutShape[Parcel, Parcel] = builder.add(Broadcast[Parcel](2))
+    val merge: UniformFanInShape[Parcel, Parcel] = builder.add(Merge[Parcel](2))
 
 
 
-    start ~> ModelConvertorFlows.flowStringToModel ~> FilterFlows.entryFlow ~> pingPongFlow ~>
+    start ~> ParcelConvertorFlows.flowStringToParcel ~> FilterFlows.entryFlow ~> PingPongFlow.flow ~>
       AuthenticationFlow(authenticationServer).flow ~> AuthorizationFlow.flow ~>
       MemoryDbFlow(memoryDbActor).flow ~>
       broadcast ~> FilterFlows.filterEvents ~> TableEventsBusFlow.busFlow ~> merge ~>
-      SubscriptionFlow(memoryDbActor).flow ~> ModelConvertorFlows.modelToString ~> finish
+      SubscriptionFlow(memoryDbActor).flow ~> ParcelConvertorFlows.parcelToString ~> finish
 
     broadcast ~> FilterFlows.filterNotEvents ~> merge
 
